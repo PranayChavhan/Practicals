@@ -1,100 +1,121 @@
-#include <iostream>
-#include <vector>
-#include <limits>
-
+#include<iostream>
 using namespace std;
 
-// Structure to represent a node in the binary search tree
-struct Node {
-    int key;
-    Node* left;
-    Node* right;
+class OptimalBST {
+private:
+    int numKeys;
+    float *successProbabilities;
+    float *failureProbabilities;
+    float **weightTable;
+    float **costTable;
+    int **rootTable;
 
-    Node(int k) {
-        key = k;
-        left = nullptr;
-        right = nullptr;
-    }
-};
+public:
+    OptimalBST(int numNodes) {
+        numKeys = numNodes;
+        successProbabilities = new float[numKeys + 1];
+        failureProbabilities = new float[numKeys + 1];
+        weightTable = new float*[numKeys + 2];
+        costTable = new float*[numKeys + 1];
+        rootTable = new int*[numKeys + 1];
 
-// Function to calculate the sum of probabilities between indices i and j
-double sumProbabilities(const vector<double>& probabilities, int i, int j) {
-    double sum = 0;
-    for (int k = i; k <= j; k++) {
-        sum += probabilities[k];
-    }
-    return sum;
-}
+        for (int i = 0; i <= numKeys + 2; i++) {
+            weightTable[i] = new float[numKeys + 1];
+        }
 
-// Function to construct the optimal binary search tree
-Node* constructOptimalBST(const vector<int>& keys, const vector<double>& probabilities) {
-    int n = keys.size();
-
-    // Create a 2D table to store the costs
-    vector<vector<double>> cost(n + 1, vector<double>(n + 1, 0));
-
-    // Create a 2D table to store the optimal subtree roots
-    vector<vector<Node*>> root(n, vector<Node*>(n, nullptr));
-
-    // Initialize the diagonal elements of the cost table
-    for (int i = 0; i < n; i++) {
-        cost[i][i] = probabilities[i];
-        root[i][i] = new Node(keys[i]);
+        for (int i = 0; i <= numKeys; i++) {
+            costTable[i] = new float[numKeys + 1];
+            rootTable[i] = new int[numKeys + 1];
+        }
     }
 
-    // Fill the cost and root tables diagonally
-    for (int L = 2; L <= n; L++) {
-        for (int i = 0; i <= n - L + 1; i++) {
-            int j = i + L - 1;
-            cost[i][j] = numeric_limits<double>::max(); // Initialize cost to maximum
+    ~OptimalBST() {
+        delete[] successProbabilities;
+        delete[] failureProbabilities;
 
-            // Calculate the optimal root and cost for the current subtree
-            for (int r = i; r <= j; r++) {
-                double c = ((r > i) ? cost[i][r - 1] : 0) + ((r < j) ? cost[r + 1][j] : 0) + sumProbabilities(probabilities, i, j);
+        for (int i = 0; i <= numKeys + 2; i++) {
+            delete[] weightTable[i];
+        }
 
-                if (c < cost[i][j]) {
-                    cost[i][j] = c;
-                    root[i][j] = new Node(keys[r]);
+        for (int i = 0; i <= numKeys; i++) {
+            delete[] costTable[i];
+            delete[] rootTable[i];
+        }
+
+        delete[] weightTable;
+        delete[] costTable;
+        delete[] rootTable;
+    }
+
+    void readProbabilities() {
+        cout << "\nEnter the probability for successful search:\n";
+        for (int i = 1; i <= numKeys; i++) {
+            cout << "P[" << i << "]: ";
+            cin >> successProbabilities[i];
+        }
+
+        cout << "\nEnter the probability for unsuccessful search:\n";
+        for (int i = 0; i <= numKeys; i++) {
+            cout << "Q[" << i << "]: ";
+            cin >> failureProbabilities[i];
+        }
+    }
+
+    void constructOptimalBST() {
+        for (int i = 0; i <= numKeys; i++) {
+            weightTable[i][i] = failureProbabilities[i];
+            costTable[i][i] = 0;
+            rootTable[i][i] = 0;
+        }
+
+        for (int length = 1; length <= numKeys; length++) {
+            for (int i = 0; i <= numKeys - length + 1; i++) {
+                int j = i + length - 1;
+                weightTable[i][j] = weightTable[i][j - 1] + successProbabilities[j] + failureProbabilities[j];
+                costTable[i][j] = -1;
+
+                for (int k = i; k <= j; k++) {
+                    float cost = (k > i ? costTable[i][k - 1] : 0) + (k < j ? costTable[k + 1][j] : 0) + weightTable[i][j];
+
+                    if (costTable[i][j] == -1 || cost < costTable[i][j]) {
+                        costTable[i][j] = cost;
+                        rootTable[i][j] = k;
+                    }
                 }
             }
         }
     }
 
-    return root[0][n - 1]; // Return the root of the optimal binary search tree
-}
-
-// Function to perform inorder traversal of the binary search tree
-void inorderTraversal(Node* root) {
-    if (root) {
-        inorderTraversal(root->left);
-        cout << root->key << " ";
-        inorderTraversal(root->right);
+    void printOptimalBST() {
+        cout << "\nOptimal Binary Search Tree (Inorder Traversal):\n";
+        printInorderTraversal(1, numKeys);
+        cout << endl;
     }
-}
+
+private:
+    void printInorderTraversal(int start, int end) {
+        if (start > end) {
+            return;
+        }
+
+        int root = rootTable[start][end];
+        cout << "Key " << root << " ";
+
+        printInorderTraversal(start, root - 1);
+        printInorderTraversal(root + 1, end);
+    }
+};
 
 int main() {
-    int n;
-    cout << "Enter the number of keys: ";
-    cin >> n;
+    int numKeys;
+    cout << "*** PROGRAM FOR OPTIMAL BINARY SEARCH TREE ***" << endl;
+    cout << "\nEnter the number of keys: ";
+    cin >> numKeys;
 
-    vector<int> keys(n);
-    vector<double> probabilities(n);
-
-    cout << "Enter the keys: ";
-    for (int i = 0; i < n; i++) {
-        cin >> keys[i];
-    }
-
-    cout << "Enter the probabilities: ";
-    for (int i = 0; i < n; i++) {
-        cin >> probabilities[i];
-    }
-
-    Node* root = constructOptimalBST(keys, probabilities);
-
-    cout << "Optimal Binary Search Tree (Inorder Traversal): ";
-    inorderTraversal(root);
-    cout << endl;
+    OptimalBST optimalBST(numKeys);
+    optimalBST.readProbabilities();
+    optimalBST.constructOptimalBST();
+    optimalBST.printOptimalBST();
 
     return 0;
 }
