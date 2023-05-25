@@ -1,122 +1,229 @@
-#include <iostream>
-#include <limits>
+#include<iostream>
+#include<fstream>
+#include<string>
 
-using namespace  std;
+using namespace std;
 
-const int MAX_OFFICES = 10;
 
-class Graph{
-    private:
-    int numOfOffices;
-    int adjacencyMatrix[MAX_OFFICES][MAX_OFFICES];
+class Student{
+private:
+    int rollNumber;
+    string name;
+    string division;
+    string address;
 
-    public:
-    Graph(int offices){
-        numOfOffices = offices;
+public:
 
-        for (int i = 0; i < numOfOffices; ++i)
-        {
-            for(int j = 0; j < numOfOffices; ++j){
-                adjacencyMatrix[i][j] = 0;
-            }
+    void setRollNumber(int rollNumber){
+        this->rollNumber = rollNumber;
+    }
+
+    void setName(const string& name){
+        this->name = name;
+    }
+
+    void setDivison(const string& division){
+        this->division = division;
+    }
+
+    void setAddress(const string& address){
+        this->address = address;
+    }
+
+    void getRollNumber(){
+        return rollNumber;
+    }
+
+    const string& getName()const{
+        return name;
+    }
+
+    const string& getDivision()const{
+        return division;
+    }
+
+    const string& getAddress()const{
+        return address;
+    }
+
+}
+class StudentInformationSystem{
+private:
+    string filename;
+
+public:
+
+    StudentInformationSystem(const string& filename): filename(filename){}
+
+    void addStudent(){
+        ofstream file(filename, ios::app);
+        if(!file){
+            cerr<<"Error opening file."<<endl;
+            return;
         }
+
+        Student student;
+
+        cout<<"Enter Roll number: ";
+        int rollNumber;
+        cin >> rollNumber;
+        student.setRollNumber(rollNumber);
+
+        cout<<<"Enter name: ";
+        string name;
+        cin.ignore();
+        getline(cin, name);
+        student.setName(name);
+
+        cout <<"Enter Divisin: ";
+        string division;
+        getline(cin, division);
+        student.setDivison(division);
+
+        cout<<"Enter Address: ";
+        string address;
+        getline(cin, address);
+        student.setAddress(address);
+
+        file << student.getRollNumber()<<","
+             << student.getName()<<","
+             << student.getDivision()<<","
+             << student.getAddress()<<endl;
+
+        file.close();
+
+
+        cout <<"Student info added successfully."<<endl;
     }
 
-    void addEdge(int src, int dest, int cost){
-        adjacencyMatrix[src][dest] = cost;
-        adjacencyMatrix[dest][src] = cost;
+    void deleteStudent(){
+        ofstream inFile(filename);
+        if(!inFile){
+            cerr <<"Error while opening file." <<endl;
+            return;
+        }
 
-    }
+        ifstream outFile("temp.txt");
+        if(!outFile){
+            cerr << "Erro while creating temp file."<<endl;
+            inFile.close();
+            return;
+        }
 
-    void displayMatrix(){
-        cout<< "Adjacency Matrix: "<<endl;
+        int rollNumber;
+        cout<<"Enter roll number of std to delete: ";
+        cin >> rollNumber;
 
-        for(int i = 0; i < numOfOffices; ++i){
-            for (int j = 0; j < numOfOffices; ++j)
+        Student Student;
+
+        bool found = false;
+
+        string line;
+
+        while(getline(inFile, line)){
+            size_t pos = line.find(',');
+            student.setRollNumber(stoi(line.substr(o, pos)));
+
+            if (student.getRollNumber == rollNumber)
             {
-                cout<<adjacencyMatrix[i][j]<<"\t";
-
+                found = true;
+                continue;
             }
-            cout << endl;
+            outFile << line << endl;
             
         }
-    }
 
+        inFile.close();
+        outFile.close();
 
-    int primMST(){
-        int key[MAX_OFFICES];
-        bool inMST[MAX_OFFICES];
-        int parent[MAX_OFFICES];
+        remove(filename.c_str());
+        remove("temp.txt", filename.c_str());
 
-        for (int i = 0; i < numOfOffices; ++i)
+        if (found)
         {
-            key[i] = numeric_limits<int>::max();
-            inMST[i] = false;
+            cout<<"deleted successfully"<<endl;
+        }else{
+            cout<<"Student not found"<<endl;
         }
-
-        key[0] = 0;
-
-        int totalCost = 0;
-
-        for (int count = 0; count < numOfOffices; ++count)
-        {
-            int minKey = numeric_limits<int>::max();
-            int minIndex;
-
-
-            for (int v = 0; v < numOfOffices; ++v)
-            {
-                if (!inMST[v] && key[v] < minKey)
-                {
-                    minKey = key[v];
-                    minIndex = v;
-                }
-                
-            }
-            int u = minIndex;
-            inMST[u] = true;
-
-
-            totalCost += key[u];
-
-
-            for (int v = 0; v < numOfOffices; ++v)
-            {
-                if(adjacencyMatrix[u][v] && !inMST[v] && adjacencyMatrix[u][v] < key[v]){
-                    key[v] = adjacencyMatrix[u][v];
-                    parent[v] = u;
-                }
-                
-            }
-            
-        }
-        return totalCost;
-        
         
     }
-};
+
+    void displayStudent(){
+        ifstream file(filename);
+        if(!file){
+            cerr<<"Error opening file."<<endl;
+            return;
+        }
+
+        int rollNumber;
+        cout<<"Enter rollnumber of student to display: ";
+        cin >> rollNumber;
+
+
+        Student student;
+        bool found = false;
+
+        string line;
+
+        while(getline(file, line)){
+            size_t pos = line.find(',');
+            student.setRollNumber(stoi(line.substr(0, pos)));
+
+
+            if(student.getRollNumber() == rollNumber){
+                found = true;
+                student.setName(line.substr(pos+1, line.find(',', pos+1) - pos-1));
+                pos = line.find(',' pos+1);
+
+                student.setDivison(line.substr(pos+1, line.find(',', pos+1) - pos-1));
+                pos = line.find(',', pos+1);
+
+                student.getAddress(line.substr(pos+1,));
+
+
+                cout<<"RollNumber:"<<student.getRollNumber()<<endl;
+                cout << "NameP: " << student.getName()<<endl;
+                cout <<"division" << student.getDivision()<<endl;
+                cout <<"Addres: " << student.getAddress()<<endl;
+
+
+                break;
+            }
+        }
+
+        file.close();
+
+        if(!file){
+            cout<<"Student not found"<<endl;
+        }
+    }
+
+    void run(){
+        while(true){
+            cout<<"Student Info System"<<endl;
+            cout<<"1. Add student" << endl;
+
+
+            int choice;
+            cin >> choice;
+
+            switch(choice){
+                case 1:
+                addStudent();
+                break;
+            }
+        }
+    }
+}
+
 
 int main(){
-    int numOfOffices, numOfConnections;
-    cout<< "Enter the number of offices: ";
-    cin>> numOfOffices;
 
-    cout << "Enter the number of connections: ";
-    cin >> numOfConnections;
+    StudentInformationSystem sis("new_file.txt");
 
-    Graph graph(numOfOffices);
-    for (int i = 0; i < numOfConnections; ++i) {
-        int src, dest, cost;
-        cout << "Enter connection " << (i + 1) << " (source destination cost): ";
-        cin >> src >> dest >> cost;
-        graph.addEdge(src, dest, cost);
-    }
+    sis.run();
 
-    graph.displayMatrix();
 
-    int minCost = graph.primMST();
-    cout << "Minimum cost to connect all offices: " << minCost << endl;
 
     return 0;
-    
 }
