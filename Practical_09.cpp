@@ -1,10 +1,10 @@
 #include <iostream>
 #include <string>
-#include <algorithm>
 
 using namespace std;
 
-struct Node {
+class Node {
+public:
     string keyword;
     string meaning;
     int height;
@@ -20,189 +20,232 @@ struct Node {
     }
 };
 
-int getHeight(Node* node) {
-    if (node == nullptr) {
-        return 0;
-    }
-    return node->height;
-}
+class Dictionary {
+private:
+    Node* root;
 
-int getBalanceFactor(Node* node) {
-    if (node == nullptr) {
-        return 0;
-    }
-    return getHeight(node->left) - getHeight(node->right);
-}
-
-void updateHeight(Node* node) {
-    if (node == nullptr) {
-        return;
-    }
-    node->height = 1 + max(getHeight(node->left), getHeight(node->right));
-}
-
-Node* leftRotate(Node* x) {
-    Node* y = x->right;
-    Node* T2 = y->left;
-
-    y->left = x;
-    x->right = T2;
-
-    updateHeight(x);
-    updateHeight(y);
-
-    return y;
-}
-
-Node* rightRotate(Node* y) {
-    Node* x = y->left;
-    Node* T2 = x->right;
-
-    x->right = y;
-    y->left = T2;
-
-    updateHeight(y);
-    updateHeight(x);
-
-    return x;
-}
-
-Node* balanceTree(Node* node, string key) {
-    updateHeight(node);
-
-    int balanceFactor = getBalanceFactor(node);
-
-    if (balanceFactor > 1 && key < node->left->keyword) {
-        return rightRotate(node);
+    int getHeight(Node* node) {
+        if (node == nullptr) {
+            return 0;
+        }
+        return node->height;
     }
 
-    if (balanceFactor < -1 && key > node->right->keyword) {
-        return leftRotate(node);
+    int getBalanceFactor(Node* node) {
+        if (node == nullptr) {
+            return 0;
+        }
+        return getHeight(node->left) - getHeight(node->right);
     }
 
-    if (balanceFactor > 1 && key > node->left->keyword) {
-        node->left = leftRotate(node->left);
-        return rightRotate(node);
+    void updateHeight(Node* node) {
+        if (node == nullptr) {
+            return;
+        }
+        node->height = 1 + max(getHeight(node->left), getHeight(node->right));
     }
 
-    if (balanceFactor < -1 && key < node->right->keyword) {
-        node->right = rightRotate(node->right);
-        return leftRotate(node);
+    Node* leftRotate(Node* x) {
+        Node* y = x->right;
+        Node* T2 = y->left;
+
+        y->left = x;
+        x->right = T2;
+
+        updateHeight(x);
+        updateHeight(y);
+
+        return y;
     }
 
-    return node;
-}
+    Node* rightRotate(Node* y) {
+        Node* x = y->left;
+        Node* T2 = x->right;
 
-Node* insertKeyword(Node* root, string key, string meaning) {
-    if (root == nullptr) {
-        return new Node(key, meaning);
+        x->right = y;
+        y->left = T2;
+
+        updateHeight(y);
+        updateHeight(x);
+
+        return x;
     }
 
-    if (key < root->keyword) {
-        root->left = insertKeyword(root->left, key, meaning);
-    } else if (key > root->keyword) {
-        root->right = insertKeyword(root->right, key, meaning);
-    } else {
-        root->meaning = meaning;
-        return root;
-    }
+    Node* balanceTree(Node* node, string key) {
+        updateHeight(node);
 
-    root = balanceTree(root, key);
+        int balanceFactor = getBalanceFactor(node);
 
-    return root;
-}
+        if (balanceFactor > 1 && key < node->left->keyword) {
+            return rightRotate(node);
+        }
 
-Node* findMinNode(Node* node) {
-    if (node == nullptr || node->left == nullptr) {
+        if (balanceFactor < -1 && key > node->right->keyword) {
+            return leftRotate(node);
+        }
+
+        if (balanceFactor > 1 && key > node->left->keyword) {
+            node->left = leftRotate(node->left);
+            return rightRotate(node);
+        }
+
+        if (balanceFactor < -1 && key < node->right->keyword) {
+            node->right = rightRotate(node->right);
+            return leftRotate(node);
+        }
+
         return node;
     }
-    return findMinNode(node->left);
-}
 
-Node* deleteKeyword(Node* root, string key) {
-    if (root == nullptr) {
-        return root;
+    Node* insertKeyword(Node* node, string key, string meaning) {
+        if (node == nullptr) {
+            return new Node(key, meaning);
+        }
+
+        if (key < node->keyword) {
+            node->left = insertKeyword(node->left, key, meaning);
+        } else if (key > node->keyword) {
+            node->right = insertKeyword(node->right, key, meaning);
+        } else {
+            node->meaning = meaning;
+            return node;
+        }
+
+        node = balanceTree(node, key);
+
+        return node;
     }
 
-    if (key < root->keyword) {
-        root->left = deleteKeyword(root->left, key);
-    } else if (key > root->keyword) {
-        root->right = deleteKeyword(root->right, key);
-    } else {
-        if (root->left == nullptr || root->right == nullptr) {
-            Node* temp = root->left ? root->left : root->right;
-            if (temp == nullptr) {
-                temp = root;
-                root = nullptr;
-            } else {
-                *root = *temp;
-            }
-            delete temp;
+
+    Node* findMinNode(Node* node) {
+        if (node == nullptr || node->left == nullptr) {
+            return node;
+        }
+        return findMinNode(node->left);
+    }
+
+    Node* deleteKeyword(Node* node, string key) {
+        if (node == nullptr) {
+            return node;
+        }
+
+        if (key < node->keyword) {
+            node->left = deleteKeyword(node->left, key);
+        } else if (key > node->keyword) {
+            node->right = deleteKeyword(node->right, key);
         } else {
-            Node* successor = findMinNode(root->right);
-            root->keyword = successor->keyword;
-            root->meaning = successor->meaning;
-            root->right = deleteKeyword(root->right, successor->keyword);
+            if (node->left == nullptr || node->right == nullptr) {
+                Node* temp = node->left ? node->left : node->right;
+                if (temp == nullptr) {
+                    temp = node;
+                    node = nullptr;
+                } else {
+                    *node = *temp;
+                }
+                delete temp;
+            } else {
+                Node* successor = findMinNode(node->right);
+                node->keyword = successor->keyword;
+                node->meaning = successor->meaning;
+                node->right = deleteKeyword(node->right, successor->keyword);
+            }
+        }
+
+        if (node == nullptr) {
+            return node;
+        }
+
+        node = balanceTree(node, key);
+
+        return node;
+    }
+
+    Node* updateKeyword(Node* node, string key, string newMeaning) {
+        if (node == nullptr) {
+            return node;
+        }
+
+        if (key < node->keyword) {
+            node->left = updateKeyword(node->left, key, newMeaning);
+        } else if (key > node->keyword) {
+            node->right = updateKeyword(node->right, key, newMeaning);
+        } else {
+            node->meaning = newMeaning;
+        }
+
+        return node;
+    }
+
+    void displayAscending(Node* node) {
+        if (node != nullptr) {
+            displayAscending(node->left);
+            cout << node->keyword << " : " << node->meaning << endl;
+            displayAscending(node->right);
         }
     }
 
-    if (root == nullptr) {
-        return root;
+    void displayDescending(Node* node) {
+        if (node != nullptr) {
+            displayDescending(node->right);
+            cout << node->keyword << " : " << node->meaning << endl;
+            displayDescending(node->left);
+        }
     }
 
-    root = balanceTree(root, key);
+    Node* searchKeyword(Node* node, string key, int& comparisons) {
+        if (node == nullptr || node->keyword == key) {
+            return node;
+        }
 
-    return root;
-}
+        comparisons++;
 
-Node* updateKeyword(Node* root, string key, string newMeaning) {
-    if (root == nullptr) {
-        return root;
+        if (key < node->keyword) {
+            return searchKeyword(node->left, key, comparisons);
+        } else {
+            return searchKeyword(node->right, key, comparisons);
+        }
     }
 
-    if (key < root->keyword) {
-        root->left = updateKeyword(root->left, key, newMeaning);
-    } else if (key > root->keyword) {
-        root->right = updateKeyword(root->right, key, newMeaning);
-    } else {
-        root->meaning = newMeaning;
+public:
+    Dictionary() {
+        root = nullptr;
     }
 
-    return root;
-}
-
-void displayAscending(Node* root) {
-    if (root != nullptr) {
-        displayAscending(root->left);
-        cout << root->keyword << " : " << root->meaning << endl;
-        displayAscending(root->right);
-    }
-}
-
-void displayDescending(Node* root) {
-    if (root != nullptr) {
-        displayDescending(root->right);
-        cout << root->keyword << " : " << root->meaning << endl;
-        displayDescending(root->left);
-    }
-}
-
-Node* searchKeyword(Node* root, string key, int& comparisons) {
-    if (root == nullptr || root->keyword == key) {
-        return root;
+    void addKeyword(string key, string meaning) {
+        root = insertKeyword(root, key, meaning);
     }
 
-    comparisons++;
-
-    if (key < root->keyword) {
-        return searchKeyword(root->left, key, comparisons);
-    } else {
-        return searchKeyword(root->right, key, comparisons);
+    void deleteKeyword(string key) {
+        root = deleteKeyword(root, key);
     }
-}
+
+    void updateKeyword(string key, string newMeaning) {
+        root = updateKeyword(root, key, newMeaning);
+    }
+
+    void displayAscendingOrder() {
+        cout << "Dictionary (Ascending Order):" << endl;
+        displayAscending(root);
+    }
+
+    void displayDescendingOrder() {
+        cout << "Dictionary (Descending Order):" << endl;
+        displayDescending(root);
+    }
+
+    string searchKeyword(string key) {
+        int comparisons = 0;
+        Node* result = searchKeyword(root, key, comparisons);
+        if (result != nullptr) {
+            return result->meaning;
+        } else {
+            return "Keyword not found!";
+        }
+    }
+};
 
 int main() {
-    Node* root = nullptr;
+    Dictionary dict;
 
     while (true) {
         cout << "Dictionary Menu:" << endl;
@@ -227,7 +270,7 @@ int main() {
                     cout << "Enter the meaning: ";
                     cin.ignore();
                     getline(cin, meaning);
-                    root = insertKeyword(root, keyword, meaning);
+                    dict.addKeyword(keyword, meaning);
                     cout << "Keyword added successfully!" << endl;
                     break;
                 }
@@ -236,7 +279,7 @@ int main() {
                     string keyword;
                     cout << "Enter the keyword to delete: ";
                     cin >> keyword;
-                    root = deleteKeyword(root, keyword);
+                    dict.deleteKeyword(keyword);
                     cout << "Keyword deleted successfully!" << endl;
                     break;
                 }
@@ -248,31 +291,23 @@ int main() {
                     cout << "Enter the new meaning: ";
                     cin.ignore();
                     getline(cin, newMeaning);
-                    root = updateKeyword(root, keyword, newMeaning);
+                    dict.updateKeyword(keyword, newMeaning);
                     cout << "Keyword updated successfully!" << endl;
                     break;
                 }
             case 4:
-                cout << "Dictionary (Ascending Order):" << endl;
-                displayAscending(root);
+                dict.displayAscendingOrder();
                 break;
             case 5:
-                cout << "Dictionary (Descending Order):" << endl;
-                displayDescending(root);
+                dict.displayDescendingOrder();
                 break;
             case 6:
                 {
                     string keyword;
                     cout << "Enter the keyword to find: ";
                     cin >> keyword;
-                    int comparisons = 0;
-                    Node* result = searchKeyword(root, keyword, comparisons);
-                    if (result != nullptr) {
-                        cout << "Meaning: " << result->meaning << endl;
-                        cout << "Number of comparisons: " << comparisons << endl;
-                    } else {
-                        cout << "Keyword not found!" << endl;
-                    }
+                    string meaning = dict.searchKeyword(keyword);
+                    cout << "Meaning: " << meaning << endl;
                     break;
                 }
             case 7:
