@@ -1,5 +1,5 @@
 #include <iostream>
-#include <limits>
+// #include <limits>
 
 using namespace std;
 
@@ -46,7 +46,7 @@ public:
 
         // Initialize key values and MST sets
         for (int i = 0; i < numOffices; ++i) {
-            key[i] = numeric_limits<int>::max();
+            key[i] = 100;
             inMST[i] = false;
         }
 
@@ -56,7 +56,7 @@ public:
 
         // Find the minimum cost spanning tree
         for (int count = 0; count < numOffices - 1; ++count) {
-            int minKey = numeric_limits<int>::max();
+            int minKey = 100;
             int minIndex;
 
             // Find the vertex with the minimum key value that is not yet included in MST

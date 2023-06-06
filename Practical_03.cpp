@@ -61,6 +61,7 @@ void insert(int val) {
                 return;
             }
             curr = curr->right;
+            break;
         }
     }
 }

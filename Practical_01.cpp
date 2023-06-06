@@ -1,3 +1,14 @@
+// Beginning with an empty binary search tree. Construct the binary search tree by
+// inserting the values in given order. After constructing binary search tree perform
+// following operations 
+// 1) Insert a new node 
+// 2) Find numbers of node in longest path 
+// 3) Minimum and maximum data value found in tree 
+// 4) Change a tree so that the roles of the left and right pointers are swapped at every node 
+// 5)Search an element
+
+
+
 #include <iostream>
 
 class BinarySearchTree {
@@ -10,55 +21,55 @@ private:
 
     Node* root;
 
+    // Node* insertNode(Node* root, int value) {
+    //     if (root == NULL) {
+    //         Node* newNode = new Node;
+    //         newNode->data = value;
+    //         newNode->left = NULL;
+    //         newNode->right = NULL;
+    //         return newNode;
+    //     }
+    //     if (value < root->data) {
+    //         root->left = insertNode(root->left, value);
+    //     }
+    //     else {
+    //         root->right = insertNode(root->right, value);
+    //     }
+    //     return root;
+    // }
+
     Node* insertNode(Node* root, int value) {
-        if (root == NULL) {
-            Node* newNode = new Node;
-            newNode->data = value;
-            newNode->left = NULL;
-            newNode->right = NULL;
-            return newNode;
-        }
-        if (value < root->data) {
-            root->left = insertNode(root->left, value);
+    Node* current = root;
+    Node* parent = NULL;
+
+    while (current != NULL) {
+        parent = current;
+
+        if (value < current->data) {
+            current = current->left;
         }
         else {
-            root->right = insertNode(root->right, value);
+            current = current->right;
         }
-        return root;
     }
 
-//     Node* insertNode(Node* root, int value) {
-//     Node* current = root;
-//     Node* parent = NULL;
+    Node* newNode = new Node;
+    newNode->data = value;
+    newNode->left = NULL;
+    newNode->right = NULL;
 
-//     while (current != NULL) {
-//         parent = current;
+    if (parent == NULL) {
+        root = newNode;
+    }
+    else if (value < parent->data) {
+        parent->left = newNode;
+    }
+    else {
+        parent->right = newNode;
+    }
 
-//         if (value < current->data) {
-//             current = current->left;
-//         }
-//         else {
-//             current = current->right;
-//         }
-//     }
-
-//     Node* newNode = new Node;
-//     newNode->data = value;
-//     newNode->left = NULL;
-//     newNode->right = NULL;
-
-//     if (parent == NULL) {
-//         root = newNode;
-//     }
-//     else if (value < parent->data) {
-//         parent->left = newNode;
-//     }
-//     else {
-//         parent->right = newNode;
-//     }
-
-//     return root;
-// }
+    return root;
+}
 
 
     int findMaxDepth(Node* root) {
