@@ -1,295 +1,143 @@
 #include <iostream>
-#include <climits>
+
 using namespace std;
 
-template <class T>
-class node
-{
-	T data;
-	node<T> *left;
-	node<T> *right;
-
+class Node {
 public:
-	// default constructor
-	node()
-	{
-		left = right = NULL;
-	}
+    int key;
+    int frequency;
+    Node* left;
+    Node* right;
 
-	// parameterized constructor
-	node(T data)
-	{
-		this->data = data;
-		left = right = NULL;
-	}
-
-	template <class B>
-	friend class OBST;
+    Node(int key, int frequency) {
+        this->key = key;
+        this->frequency = frequency;
+        left = right = nullptr;
+    }
 };
 
-// Optimal Binary Search Tree ------------------------------------------------------
-
-template <class T>
-class OBST
-{
-	node<T> *root;
+class OBST {
+private:
+    int* keys;
+    int* frequencies;
+    int n;
+    Node** cost;
+    Node** root;
 
 public:
-	// default constructor
-	OBST()
-	{
-		root = NULL;
-	}
+    OBST(int* keys, int* frequencies, int n) {
+        this->keys = keys;
+        this->frequencies = frequencies;
+        this->n = n;
 
-	// getter
-	node<T> *get_root()
-	{
-		return this->root;
-	}
+        cost = new Node*[n + 1];
+        root = new Node*[n + 1];
+        for (int i = 0; i <= n; i++) {
+            cost[i] = new Node[n + 1];
+            root[i] = new Node[n + 1];
+        }
+    }
 
-	// member functions
-	void calculate_weight(double *, double *, int, T *);
-	node<T> *create_tree(int, int, double **, T *);
+    void constructOBST() {
+        for (int i = 0; i < n; i++) {
+            cost[i][i] = Node(keys[i], frequencies[i]);
+            cost[i][i].frequency = frequencies[i];
+        }
 
-	void inorder_traversal(node<T> *curr);
-	void preorder_traversal(node<T> *curr);
-	void postorder_traversal(node<T> *curr);
+        for (int L = 2; L <= n; L++) {
+            for (int i = 0; i <= n - L + 1; i++) {
+                int j = i + L - 1;
+                cost[i][j].frequency = INT_MAX;
+
+                for (int r = i; r <= j; r++) {
+                    int frequencySum = getFrequencySum(i, j);
+                    int c = ((r > i) ? cost[i][r - 1].frequency : 0) +
+                            ((r < j) ? cost[r + 1][j].frequency : 0) + frequencySum;
+
+                    if (c < cost[i][j].frequency) {
+                        cost[i][j].frequency = c;
+                        cost[i][j].key = keys[r];
+                        cost[i][j].left = ((r > i) ? &cost[i][r - 1] : nullptr);
+                        cost[i][j].right = ((r < j) ? &cost[r + 1][j] : nullptr);
+                    }
+                }
+            }
+        }
+    }
+
+    int getFrequencySum(int i, int j) {
+        int sum = 0;
+        for (int k = i; k <= j; k++)
+            sum += frequencies[k];
+        return sum;
+    }
+
+    void printOBST() {
+        cout << "Optimal Binary Search Tree:" << endl;
+        printOBSTUtil(0, n - 1, 0);
+    }
+
+    void printOBSTUtil(int start, int end, int level) {
+        if (start > end)
+            return;
+
+        if (start == end) {
+            cout << "Level " << level << ": ";
+            cout << "(" << keys[start] << ") " << endl;
+            return;
+        }
+
+        int key = cost[start][end].key;
+        cout << "Level " << level << ": ";
+        cout << "(" << key << ") " << endl;
+
+        int i = findKeyIndex(key);
+        printOBSTUtil(start, i - 1, level + 1);
+        printOBSTUtil(i + 1, end, level + 1);
+    }
+
+    int findKeyIndex(int key) {
+        for (int i = 0; i < n; i++) {
+            if (keys[i] == key)
+                return i;
+        }
+        return -1;
+    }
+
+    ~OBST() {
+        for (int i = 0; i <= n; i++) {
+            delete[] cost[i];
+            delete[] root[i];
+        }
+        delete[] cost;
+        delete[] root;
+    }
 };
 
-// DRIVER CODE -------------------------------------------------------------------
+int main() {
+    int n;
+    cout << "Enter the number of keys: ";
+    cin >> n;
 
-int main()
-{
-	OBST<string> ST;
-	int choice = -1;
-	int temp = 0;
+    int* keys = new int[n];
+    int* frequencies = new int[n];
 
-	cout << "# Implementation of OBST\n";
+    cout << "Enter the keys:" << endl;
+    for (int i = 0; i < n; i++) {
+        cin >> keys[i];
+    }
 
-	while (choice)
-	{
-		cout << "\n---------- MENU ----------\n"
-			 << "1. Input identifiers\n"
-			 << "2. Inorder Traversal\n"
-			 << "3. Preorder Traversal\n"
-			 << "4. Postorder Traversal\n"
-			 << "0. Exit"
-			 << "\n--------------------------" << endl;
-		cout << "Enter choice = ";
-		cin >> choice;
+    cout << "Enter the frequencies:" << endl;
+    for (int i = 0; i < n; i++) {
+        cin >> frequencies[i];
+    }
 
-		switch (choice)
-		{
-		case 1: // Input identifiers
-		{
-			cout << "Enter no. of identifiers = ";
-			cin >> temp;
-			string *input = new string[temp + 1];
-			double *p = new double[temp];
-			double *q = new double[temp + 1];
-			cout << "Enter identifiers = " << endl;
+    OBST obst(keys, frequencies, n);
+    obst.constructOBST();
+    obst.printOBST();
 
-			input[0] = "NULL"; // dummy node
-			for (int i = 0; i < temp; ++i)
-			{
-				cout << "Enter identifier " << i + 1 << " = ";
-				cin >> input[i + 1];
-			}
-			cout << "Enter probabilities of successful search = " << endl;
-			for (int i = 0; i < temp; ++i)
-			{
-				cout << "Enter probability " << i + 1 << " = ";
-				cin >> p[i];
-			}
-			cout << "Enter probabilities of unsuccessful search = " << endl;
-			for (int i = 0; i < temp + 1; ++i)
-			{
-				cout << "Enter probability " << i + 1 << " = ";
-				cin >> q[i];
-			}
-			ST.calculate_weight(p, q, temp, input);
-			break;
-		}
+    delete[] keys;
+    delete[] frequencies;
 
-		case 2: // Inorder Traversal
-		{
-			cout << "Inorder Traversal = " << endl;
-			ST.inorder_traversal(ST.get_root());
-			break;
-		}
-
-		case 3: // Preorder Traversal
-		{
-			cout << "Preorder Traversal = " << endl;
-			ST.preorder_traversal(ST.get_root());
-			break;
-		}
-
-		case 4: // Postorder Traversal
-		{
-			cout << "Postorder Traversal = " << endl;
-			ST.postorder_traversal(ST.get_root());
-			break;
-		}
-
-		case 0: // Exit
-		{
-			cout << "Thank you :)" << endl;
-			break;
-		}
-
-		default: // Forced exit
-		{
-			cout << "# Forced exit due to error" << endl;
-			exit(0);
-		}
-		}
-	}
-
-	return 0;
+    return 0;
 }
-
-// DEFINITIONS -------------------------------------------------------------------
-
-template <class T>
-void OBST<T>::calculate_weight(double *p, double *q, int n, T *input)
-{
-	// p = array of probability of successful search
-	// q = array of probability of unsuccessful search
-	// n = number of identifiers
-
-	// Calculations matrix
-
-	double **w = new double *[n + 1]; // 2D matrix for weights
-	for (int i = 0; i < n + 1; ++i)
-	{
-		w[i] = new double[n + 1];
-	}
-
-	double **c = new double *[n + 1]; // 2D matrix for costs
-	for (int i = 0; i < n + 1; ++i)
-	{
-		c[i] = new double[n + 1];
-	}
-
-	double **r = new double *[n + 1]; // 2D matrix for roots
-	for (int i = 0; i < n + 1; ++i)
-	{
-		r[i] = new double[n + 1];
-	}
-
-	for (int i = 0; i < n; ++i)
-	{
-		// calculate wts, costs of null tree
-		w[i][i] = q[i];
-		r[i][i] = c[i][i] = 0;
-
-		// calculate wts, costs of tree with one node
-		w[i][i + 1] = q[i] + q[i + 1] + p[i];
-		r[i][i + 1] = i + 1;
-		c[i][i + 1] = w[i][i + 1];
-	}
-
-	// for last entry
-	w[n][n] = q[n];
-	r[n][n] = c[n][n] = 0;
-
-	// calculate wt and cost of tree having more than one node
-	for (int m = 2; m <= n; ++m)
-	{
-		// m = row number in calculations matrix
-		for (int i = 0; i <= n - m; ++i)
-		{
-			double Min = 999;
-
-			int j = i + m;
-			int k = 0;
-			w[i][j] = w[i][j - 1] + p[j - 1] + q[j];
-
-			// find minimum cost :
-			// C<i,j> = min(i<k<= j){C<i,k-1> + C<k,j>} + W<i,j>
-
-			for (int x = i + 1; x <= j; ++x)
-			{
-				// find minimum sum
-				double sum = c[i][x - 1] + c[x][j];
-				//					cout << "Before:" << Min << endl;
-				if (sum < Min)
-				{
-					Min = sum;
-					k = x;
-				}
-				//					cout << "After:" << Min << endl;
-			}
-			// set cost and root
-			c[i][j] = w[i][j] + c[i][k - 1] + c[k][j];
-			r[i][j] = k;
-		}
-	}
-
-	// 	To check if calculations matrix values are correct or not :
-	//	for (int i=0; i<n+1; ++i){
-	//		for(int j=0; j<n+1; ++j){
-	//			cout << w[i][j] << "\t";
-	//			cout << c[i][j] << "\t";
-	//			cout << r[i][j] << "\t";
-	//		}
-	//		cout << "\n";
-	//	}
-
-	this->root = this->create_tree(0, n, r, input);
-}
-
-template <class T>
-node<T> *OBST<T>::create_tree(int i, int j, double **r, T *input)
-{
-	if (i != j)
-	{
-		int k = r[i][j];
-		node<T> *t = new node<T>(input[k]);
-
-		t->left = this->create_tree(i, k - 1, r, input);
-		t->right = this->create_tree(k, j, r, input);
-
-		return t;
-	}
-	else
-	{
-		return NULL;
-	}
-}
-
-template <class T>
-void OBST<T>::inorder_traversal(node<T> *curr)
-{
-	if (curr != NULL)
-	{
-		this->inorder_traversal(curr->left);
-		cout << curr->data << " ";
-		this->inorder_traversal(curr->right);
-	}
-}
-
-template <class T>
-void OBST<T>::preorder_traversal(node<T> *curr)
-{
-	if (curr != NULL)
-	{
-		cout << curr->data << " ";
-		this->preorder_traversal(curr->left);
-		this->preorder_traversal(curr->right);
-	}
-}
-
-template <class T>-+
-
-void OBST<T>::postorder_traversal(node<T> *curr)
-{
-	if (curr != NULL)
-	{
-		this->postorder_traversal(curr->left);
-		this->postorder_traversal(curr->right);
-		cout << curr->data << " ";
-	}
-}
-
