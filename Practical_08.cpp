@@ -1,4 +1,5 @@
 #include <iostream>
+#include <climits>
 
 using namespace std;
 
@@ -9,12 +10,21 @@ public:
     Node* left;
     Node* right;
 
+    Node() {
+        key = 0;
+        frequency = 0;
+        left = nullptr;
+        right = nullptr;
+    }
+
     Node(int key, int frequency) {
         this->key = key;
         this->frequency = frequency;
-        left = right = nullptr;
+        left = nullptr;
+        right = nullptr;
     }
 };
+
 
 class OBST {
 private:
@@ -30,22 +40,21 @@ public:
         this->frequencies = frequencies;
         this->n = n;
 
-        cost = new Node*[n + 1];
-        root = new Node*[n + 1];
-        for (int i = 0; i <= n; i++) {
-            cost[i] = new Node[n + 1];
-            root[i] = new Node[n + 1];
+        cost = new Node*[n];
+        root = new Node*[n];
+        for (int i = 0; i < n; i++) {
+            cost[i] = new Node[n];
+            root[i] = new Node[n];
         }
     }
 
     void constructOBST() {
         for (int i = 0; i < n; i++) {
             cost[i][i] = Node(keys[i], frequencies[i]);
-            cost[i][i].frequency = frequencies[i];
         }
 
         for (int L = 2; L <= n; L++) {
-            for (int i = 0; i <= n - L + 1; i++) {
+            for (int i = 0; i <= n - L; i++) {
                 int j = i + L - 1;
                 cost[i][j].frequency = INT_MAX;
 
@@ -57,8 +66,8 @@ public:
                     if (c < cost[i][j].frequency) {
                         cost[i][j].frequency = c;
                         cost[i][j].key = keys[r];
-                        cost[i][j].left = ((r > i) ? &cost[i][r - 1] : nullptr);
-                        cost[i][j].right = ((r < j) ? &cost[r + 1][j] : nullptr);
+                        root[i][j].left = ((r > i) ? &root[i][r - 1] : nullptr);
+                        root[i][j].right = ((r < j) ? &root[r + 1][j] : nullptr);
                     }
                 }
             }
@@ -105,7 +114,7 @@ public:
     }
 
     ~OBST() {
-        for (int i = 0; i <= n; i++) {
+        for (int i = 0; i < n; i++) {
             delete[] cost[i];
             delete[] root[i];
         }

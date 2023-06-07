@@ -15,7 +15,7 @@ public:
 
 class HashTable {
 private:
-    static const int TABLE_SIZE = 10;
+    int TABLE_SIZE = 10;
     Client** table;
     int numCollisions;
     int numComparisons;
@@ -66,6 +66,20 @@ public:
         table[index] = newClient;
     }
 
+    void remove(const string& name) {
+        int index = hashFunction(name);
+
+        while (table[index] != nullptr) {
+            numComparisons++;
+            if (table[index]->name == name) {
+                delete table[index];
+                table[index] = nullptr;
+                return;
+            }
+            index = (index + 1) % TABLE_SIZE;
+        }
+    }
+
     string search(const string& name) {
         int index = hashFunction(name);
 
@@ -96,7 +110,8 @@ int main() {
         cout << "Telephone Book Database" << endl;
         cout << "1. Add a client" << endl;
         cout << "2. Search for a client's phone number" << endl;
-        cout << "3. Exit" << endl;
+        cout << "3. Delete a client" << endl;
+        cout << "4. Exit" << endl;
         cout << "Enter your choice: ";
 
         int choice;
@@ -126,7 +141,16 @@ int main() {
                 cout << "Phone number: " << phoneNumber << endl;
             break;
         }
-        case 3:
+        case 3: {
+            string name;
+            cout << "Enter client's name to delete: ";
+            cin >> name;
+
+            hashTable.remove(name);
+            cout << "Client deleted successfully!" << endl;
+            break;
+        }
+        case 4:
             exitMenu = true;
             break;
         default:

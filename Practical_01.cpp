@@ -1,13 +1,3 @@
-// Beginning with an empty binary search tree. Construct the binary search tree by
-// inserting the values in given order. After constructing binary search tree perform
-// following operations 
-// 1) Insert a new node 
-// 2) Find numbers of node in longest path 
-// 3) Minimum and maximum data value found in tree 
-// 4) Change a tree so that the roles of the left and right pointers are swapped at every node 
-// 5)Search an element
-
-
 
 #include <iostream>
 
