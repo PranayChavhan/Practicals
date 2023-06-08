@@ -50,7 +50,9 @@ private:
     string filename;
 
 public:
-    StudentInformationSystem(const string& filename) : filename(filename) {}
+    StudentInformationSystem(string filename) {
+        this->filename = filename;
+    }
 
     void addStudent() {
         ofstream file(filename, ios::app);
